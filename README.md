@@ -1,2 +1,61 @@
 # analisisR
 En este proyecto se analizará una base de datos mediante el uso de R
+
+## Contexto: 
+Los temas más importantes vistos en las clases de R, fueron la manipulación y visualización
+ de datos con Tidyverse. Porque en un principio lo que se espera de un analista o científico
+ de datos, es que sea capaz de tomar cualquier conjunto de datos para manipularlo y
+ visualizarlo a su gusto. Al final de este proceso es cuando se extrae la información más
+ importante y luego se comparten los resultados con el resto de la organización
+
+### Objetivo: 
+Realiza un análisis exploratorio en R, del conjunto de datos Titanic para comprender mejor
+ qué características (por ejemplo, edad, nivel socioeconómico, costo de ticket, puerto de
+ embarcación, etcétera) tienen los pasajeros que sobrevivieron o no sobrevivieron al evento.
+ Una vez finalizado el análisis, en un documento pdf comparte un resumen no mayor a 2
+ párrafos con tus descubrimientos más importantes.
+
+
+## Caso Practico
+library(tidyverse)
+datos_titanic <- read_csv(“Titanicv2.csv”)
+str(datos_titanic) summary(datos_titanic)
+datos_limpios <- datos_titanic %>% mutate( Age = ifelse(is.na(Age), median(Age, na.rm = TRUE), Age), Embarked = ifelse(is.na(Embarked), “Desconocido”, Embarked)) %>% select(-Name, -Cabin, -Ticket)
+datos_limpios <- datos_limpios %>% mutate( Survived = factor(Survived, levels = c(“No”, “Yes”)), Pclass = factor(Pclass, levels = c(“Lower Class”, “Middle Class”, “Upper Class”)), Sex = factor(Sex), Embarked = factor(Embarked))
+
+1. Frecuencia de sobrevivientes
+ggplot(datos_limpios, aes(x = Survived, fill = Survived)) + geom_bar() + labs(title = “Distribución de Supervivencia”, x = “¿Sobrevivió?”, y = “Cantidad”) + theme_minimal()
+
+2. Supervivencia por género
+ggplot(datos_limpios, aes(x = Sex, fill = Survived)) + geom_bar(position = “fill”) + labs(title = “Proporción de Supervivencia por Género”, y = “Proporción”) + scale_y_continuous(labels = scales::percent) + theme_minimal()
+
+3. Edad promedio por supervivencia
+datos_limpios %>% group_by(Survived) %>% summarise( Edad_Promedio = mean(Age, na.rm = TRUE), Edad_Mediana = median(Age, na.rm = TRUE), .groups = “drop”)
+
+4. Diagrama de cajas: Edad vs Supervivencia
+ggplot(datos_limpios, aes(x = Survived, y = Age, fill = Survived)) + geom_boxplot() + labs(title = “Distribución de Edad según Supervivencia”, y = “Edad”) + theme_minimal()
+
+5. Tarifa media por clase y supervivencia
+datos_limpios %>% group_by(Pclass, Survived) %>% summarise(Fare_Promedio = mean(Fare, na.rm = TRUE), .groups = “drop”) %>% ggplot(aes(x = Pclass, y = Fare_Promedio, fill = Survived)) + geom_col(position = “dodge”) + labs(title = “Costo Promedio del Ticket por Clase y Supervivencia”) + theme_minimal()
+
+6. Puerto de embarque y supervivencia
+ggplot(datos_limpios, aes(x = Embarked, fill = Survived)) + geom_bar(position = “dodge”) + labs(title = “Puerto de Embarque y Supervivencia”, x = “Puerto”, y = “Pasajeros”) + theme_minimal()
+
+7. Relación entre hermanos/padres e hijos con la supervivencia
+ggplot(datos_limpios, aes(x = SibSp + Parch, fill = Survived)) + geom_histogram(binwidth = 1, position = “dodge”) + labs(title = “Relación Familiar y Supervivencia”, x = “Total de familiares a bordo”) + theme_minimal()
+
+## Conclusiones
+El análisis del conjunto de datos del Titanic permitió identificar patrones claros sobre los factores que influyeron en la supervivencia de los pasajeros. Se observó que las mujeres tuvieron una tasa de supervivencia significativamente mayor que los hombres, lo cual es coherente con la prioridad dada a mujeres y niños durante la evacuación, también se evidenció una ventaja para los pasajeros de clase alta (Upper Class), quienes pagaron tarifas más elevadas y presentaron mayores índices de supervivencia en comparación con las clases media y baja, la edad promedio fue similar entre sobrevivientes y no sobrevivientes, aunque los menores de edad parecen haber tenido una mayor probabilidad de sobrevivir, según el diagrama de caja.
+En cuanto al puerto de embarque, los pasajeros que abordaron en Cherburgo mostraron mayores tasas de supervivencia en comparación con los de Southampton, el cual tuvo la mayor cantidad de embarques pero con mayor número de fallecidos, además, se encontró una ligera tendencia a una mayor supervivencia entre quienes viajaban acompañados por familiares, aunque la mayoría de pasajeros viajaban solos, estos hallazgos sugieren que el género, la clase social y el lugar de embarque fueron determinantes clave en la supervivencia durante el hundimiento del Titanic.
+
+
+
+
+
+
+
+
+
+ 
+
+
